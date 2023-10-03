@@ -1006,7 +1006,7 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
       } else {
         eigen_assert(!use_thread_local);
         device_.enqueueNoNotification(
-            [=]() { kernel(m, n, k, use_thread_local); });
+            [=, this]() { kernel(m, n, k, use_thread_local); });
       }
     }
 
@@ -1060,7 +1060,7 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
         while (end - start > 1) {
           Index mid = (start + end) / 2;
           device_.enqueueNoNotification(
-              [=]() { enqueue_packing_helper(mid, end, k, rhs); });
+              [=, this]() { enqueue_packing_helper(mid, end, k, rhs); });
           end = mid;
         }
 
@@ -1079,7 +1079,7 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
 
         if (pack_async) {
           device_.enqueueNoNotification(
-              [=]() { enqueue_packing_helper(start, end, k, rhs); });
+              [=, this]() { enqueue_packing_helper(start, end, k, rhs); });
         } else {
           enqueue_packing_helper(start, end, k, rhs);
         }

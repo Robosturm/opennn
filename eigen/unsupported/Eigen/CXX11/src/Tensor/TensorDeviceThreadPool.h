@@ -207,7 +207,7 @@ struct ThreadPoolDevice {
     // block_count leaves that do actual computations.
     Barrier barrier(static_cast<unsigned int>(block.count));
     std::function<void(Index, Index)> handleRange;
-    handleRange = [=, &handleRange, &barrier, &f](Index firstIdx,
+    handleRange = [=, this, &handleRange, &barrier, &f](Index firstIdx,
                                                   Index lastIdx) {
       while (lastIdx - firstIdx > block.size) {
         // Split into halves and schedule the second half on a different thread.

@@ -807,7 +807,7 @@ string DataSet::get_project_type_string(const DataSet::ProjectType& newProjectTy
     {
         return "AutoAssociation";
     }
-
+    return "";
 }
 
 

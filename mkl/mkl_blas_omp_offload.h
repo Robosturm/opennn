@@ -24,10 +24,6 @@
 #include "mkl_types.h"
 #include "mkl_blas_omp_variant.h"
 
-#if (_OPENMP >= 202011)
-#include <omp.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

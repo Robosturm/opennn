@@ -415,6 +415,7 @@ string NeuralNetwork::get_project_type_string() const
     {
         return "AutoAssociation";
     }
+    return "";
 }
 
 /// Returns a string vector with the names of the variables used as outputs.
