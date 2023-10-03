@@ -178,7 +178,7 @@ void CorrelationsTest::test_logistic_correlation()
         y[i] = exp(static_cast<type>(2.5)*x[i] + static_cast<type>(1.4));
     }
 
-    const int n = omp_get_max_threads();
+    const int n = 1; // omp_get_max_threads();
     ThreadPool* thread_pool = new ThreadPool(n);
     ThreadPoolDevice* thread_pool_device = new ThreadPoolDevice(thread_pool, n);
 

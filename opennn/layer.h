@@ -64,7 +64,7 @@ public:
 
     explicit Layer()   
     {
-        const int n = omp_get_max_threads();
+        const int n = 1; // omp_get_max_threads();
 
         thread_pool = new ThreadPool(n);
         thread_pool_device = new ThreadPoolDevice(thread_pool, n);

@@ -16,7 +16,7 @@ namespace opennn
 
 OptimizationAlgorithm::OptimizationAlgorithm()
 {
-    const int n = omp_get_max_threads();
+    const int n = 1; // omp_get_max_threads();
     thread_pool = new ThreadPool(n);
     thread_pool_device = new ThreadPoolDevice(thread_pool, n);
 
@@ -30,7 +30,7 @@ OptimizationAlgorithm::OptimizationAlgorithm()
 OptimizationAlgorithm::OptimizationAlgorithm(LossIndex* new_loss_index_pointer)
     : loss_index_pointer(new_loss_index_pointer)
 {
-    const int n = omp_get_max_threads();
+    const int n = 1; // omp_get_max_threads();
     thread_pool = new ThreadPool(n);
     thread_pool_device = new ThreadPoolDevice(thread_pool, n);
 

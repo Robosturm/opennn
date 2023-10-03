@@ -5621,7 +5621,7 @@ void DataSet::set_default()
 //    delete thread_pool;
 //    delete thread_pool_device;
 
-    const int n = omp_get_max_threads();
+    const int n = 1; // omp_get_max_threads();
     thread_pool = new ThreadPool(n);
     thread_pool_device = new ThreadPoolDevice(thread_pool, n);
 
@@ -7003,7 +7003,7 @@ void DataSet::set_gmt(Index& new_gmt)
 
 Tensor<Correlation, 2> DataSet::calculate_input_target_columns_correlations() const
 {
-    const int number_of_thread = omp_get_max_threads();
+    const int number_of_thread = 1; // omp_get_max_threads();
     ThreadPool* correlations_thread_pool = new ThreadPool(number_of_thread);
     ThreadPoolDevice* correlations_thread_pool_device = new ThreadPoolDevice(correlations_thread_pool, number_of_thread);
 
@@ -9673,22 +9673,22 @@ void DataSet::save_data_binary(const string& binary_data_file_name) const
     std::regex accent_regex("[\\xC0-\\xFF]");
     std::ofstream file;
 
-    #ifdef _WIN32
-
-    if (std::regex_search(binary_data_file_name, accent_regex))
-    {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(binary_data_file_name);
-        file.open(file_name_wide, ios::binary);
-    }
-    else
-    {
+    //#ifdef _WIN32
+//
+    //if (std::regex_search(binary_data_file_name, accent_regex))
+    //{
+    //    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    //    std::wstring file_name_wide = conv.from_bytes(binary_data_file_name);
+    //    file.open(file_name_wide, ios::binary);
+    //}
+    //else
+    //{
+    //    file.open(binary_data_file_name.c_str(), ios::binary);
+    //}
+//
+    //#else
         file.open(binary_data_file_name.c_str(), ios::binary);
-    }
-
-    #else
-        file.open(binary_data_file_name.c_str(), ios::binary);
-    #endif
+    //#endif
 
     if(!file.is_open())
     {
@@ -9873,21 +9873,21 @@ void DataSet::load_data_binary()
     std::regex accent_regex("[\\xC0-\\xFF]");
     std::ifstream file;
 
-    #ifdef _WIN32
+//    #ifdef _WIN32
 
-    if (std::regex_search(data_file_name, accent_regex))
-    {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide, ios::binary);
-    }
-    else
-    {
+    //if (std::regex_search(data_file_name, accent_regex))
+    //{
+    //    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    //    std::wstring file_name_wide = conv.from_bytes(data_file_name);
+    //    file.open(file_name_wide, ios::binary);
+    //}
+    //else
+    //{
+    //    file.open(data_file_name.c_str(), ios::binary);
+    //}
+    //#else
         file.open(data_file_name.c_str(), ios::binary);
-    }
-    #else
-        file.open(data_file_name.c_str(), ios::binary);
-    #endif
+    //#endif
 
     if(!file.is_open())
     {
@@ -13462,20 +13462,20 @@ void DataSet::read_csv_1()
     std::regex accent_regex("[\\xC0-\\xFF]");
     std::ifstream file;
 
-#ifdef _WIN32
-
-    if (std::regex_search(data_file_name, accent_regex))
-    {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
-    }else
-    {
-        file.open(data_file_name.c_str());
-    }
-#else
+//#ifdef _WIN32
+//
+//    if (std::regex_search(data_file_name, accent_regex))
+//    {
+//        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+//        std::wstring file_name_wide = conv.from_bytes(data_file_name);
+//        file.open(file_name_wide);
+//    }else
+//    {
+//        file.open(data_file_name.c_str());
+//    }
+//#else
     file.open(data_file_name.c_str());
-#endif
+//#endif
 
     if(!file.is_open())
     {
@@ -13707,21 +13707,21 @@ void DataSet::read_csv_2_simple()
     std::regex accent_regex("[\\xC0-\\xFF]");
     std::ifstream file;
 
-    #ifdef _WIN32
-
-    if (std::regex_search(data_file_name, accent_regex))
-    {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
-    }else
-    {
+    //#ifdef _WIN32
+//
+    //if (std::regex_search(data_file_name, accent_regex))
+    //{
+    //    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    //    std::wstring file_name_wide = conv.from_bytes(data_file_name);
+    //    file.open(file_name_wide);
+    //}else
+    //{
+    //    file.open(data_file_name.c_str());
+    //}
+//
+    //#else
         file.open(data_file_name.c_str());
-    }
-
-    #else
-        file.open(data_file_name.c_str());
-    #endif
+    //#endif
 
     if(!file.is_open())
     {
@@ -13814,21 +13814,21 @@ void DataSet::read_csv_3_simple()
     std::regex accent_regex("[\\xC0-\\xFF]");
     std::ifstream file;
 
-    #ifdef _WIN32
-
-    if (std::regex_search(data_file_name, accent_regex))
-    {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
-    }else
-    {
+    //#ifdef _WIN32
+//
+    //if (std::regex_search(data_file_name, accent_regex))
+    //{
+    //    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    //    std::wstring file_name_wide = conv.from_bytes(data_file_name);
+    //    file.open(file_name_wide);
+    //}else
+    //{
+    //    file.open(data_file_name.c_str());
+    //}
+//
+    //#else
         file.open(data_file_name.c_str());
-    }
-
-    #else
-        file.open(data_file_name.c_str());
-    #endif
+    //#endif
 
     if(!file.is_open())
     {
@@ -13947,21 +13947,21 @@ void DataSet::read_csv_2_complete()
     std::regex accent_regex("[\\xC0-\\xFF]");
     std::ifstream file;
 
-    #ifdef _WIN32
-
-    if (std::regex_search(data_file_name, accent_regex))
-    {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
-    }
-    else
-    {
-        file.open(data_file_name.c_str());
-    }
-#else
+//    #ifdef _WIN32
+//
+//    if (std::regex_search(data_file_name, accent_regex))
+//    {
+//        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+//        std::wstring file_name_wide = conv.from_bytes(data_file_name);
+//        file.open(file_name_wide);
+//    }
+//    else
+//    {
+//        file.open(data_file_name.c_str());
+//    }
+//#else
     file.open(data_file_name.c_str());
-#endif
+//#endif
 
 
     if(!file.is_open())
@@ -14109,22 +14109,22 @@ void DataSet::read_csv_3_complete()
     std::regex accent_regex("[\\xC0-\\xFF]");
     std::ifstream file;
 
-    #ifdef _WIN32
-
-    if (std::regex_search(data_file_name, accent_regex))
-    {
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        std::wstring file_name_wide = conv.from_bytes(data_file_name);
-        file.open(file_name_wide);
-    }
-    else
-    {
+//    #ifdef _WIN32
+//
+//    if (std::regex_search(data_file_name, accent_regex))
+//    {
+//        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+//        std::wstring file_name_wide = conv.from_bytes(data_file_name);
+//        file.open(file_name_wide);
+//    }
+//    else
+//    {
+//        file.open(data_file_name.c_str());
+//    }
+//
+//    #else
         file.open(data_file_name.c_str());
-    }
-
-    #else
-        file.open(data_file_name.c_str());
-    #endif
+//    #endif
 
 
     if(!file.is_open())

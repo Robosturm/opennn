@@ -23,8 +23,9 @@
 
 // For numeric limits
 
+#ifndef NOMINMAX
 #define NOMINMAX
-
+#endif
 
 #define EIGEN_USE_THREADS
 
