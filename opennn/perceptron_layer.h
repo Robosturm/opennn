@@ -50,21 +50,29 @@ struct ProbabilisticLayerBackPropagationLM;
 
 /// This class represents a layer of perceptrons.
 
-/// PerceptronLayer is a single-layer network with a hard-limit trabsfer function.
+/// PerceptronLayer is a single-layer network with a hard-limit transfer function.
 /// This network is often trained with the perceptron learning rule.
 ///
 /// Layers of perceptrons will be used to construct multilayer perceptrons, such as an approximation problems .
 
 class PerceptronLayer : public Layer
-
 {
 
 public:
 
     /// Enumeration of the available activation functions for the perceptron neuron model.
 
-    enum class ActivationFunction{Threshold, SymmetricThreshold, Logistic, HyperbolicTangent, Linear, RectifiedLinear,
-                            ExponentialLinear, ScaledExponentialLinear, SoftPlus, SoftSign, HardSigmoid};
+    enum class ActivationFunction{Threshold,
+                                  SymmetricThreshold,
+                                  Logistic,
+                                  HyperbolicTangent,
+                                  Linear,
+                                  RectifiedLinear,
+                                  ExponentialLinear,
+                                  ScaledExponentialLinear,
+                                  SoftPlus,
+                                  SoftSign,
+                                  HardSigmoid};
 
    // Constructors
 
@@ -79,6 +87,9 @@ public:
    Index get_inputs_number() const override;
    Index get_neurons_number() const final;
 
+   Tensor<Index, 1> get_inputs_dimensions() const final;
+   Tensor<Index, 1> get_outputs_dimensions() const final;
+
    // Parameters
 
    const Tensor<type, 2>& get_biases() const;
@@ -90,6 +101,7 @@ public:
    Index get_biases_number() const;
    Index get_synaptic_weights_number() const;
    Index get_parameters_number() const final;
+   type get_dropout_rate() const;
    Tensor<type, 1> get_parameters() const final;
 
    Tensor< TensorMap< Tensor<type, 1>>*, 1> get_layer_parameters() final;
@@ -128,6 +140,7 @@ public:
 
    void set_activation_function(const ActivationFunction&);
    void set_activation_function(const string&);
+   void set_dropout_rate(const type&);
 
    // Display messages
 
@@ -143,33 +156,24 @@ public:
 
    // Perceptron layer combinations
 
-   void calculate_combinations(const Tensor<type, 2>&,
+   void calculate_combinations(const DynamicTensor<type>&,
                                const Tensor<type, 2>&,
                                const Tensor<type, 2>&,
-                               type*) const;
+                               LayerForwardPropagation*) const;
 
    // Perceptron layer activations
 
-   void calculate_activations(type*, const Tensor<Index, 1>&,
-                              type*, const Tensor<Index, 1>&) const;
+   void calculate_activations(LayerForwardPropagation*) const;
 
-   void calculate_activations_derivatives(type*, const Tensor<Index, 1>&,
-                                          type*, const Tensor<Index, 1>&,
-                                          type*, const Tensor<Index, 1>&) const;
+   void calculate_activations_derivatives(LayerForwardPropagation*) const;
 
    // Perceptron layer outputs
 
+   void forward_propagate(const Tensor<DynamicTensor<type>, 1>&,
+                          LayerForwardPropagation*,
+                          const bool&) final;
 
-//   void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>&) final;
-
-   void forward_propagate(type*, const Tensor<Index, 1>&, LayerForwardPropagation*, bool&) final;
-
-//   void forward_propagate(type*, const Tensor<Index, 1>&,
-//                          LayerForwardPropagation*) final;
-
-
-   void forward_propagate(type*,
-                          const Tensor<Index, 1>&,
+   void forward_propagate(const Tensor<DynamicTensor<type>, 1>&,
                           Tensor<type, 1>&,
                           LayerForwardPropagation*) final;
 
@@ -186,6 +190,7 @@ public:
    void calculate_hidden_delta(ProbabilisticLayerForwardPropagation*,
                                ProbabilisticLayerBackPropagation*,
                                PerceptronLayerBackPropagation*) const;
+
 
    // Delta LM
 
@@ -236,13 +241,6 @@ protected:
 
    // MEMBERS
 
-   /// Inputs
-
-   Tensor<type, 2> inputs;
-
-   /// Outputs
-
-   Tensor<type, 2> outputs;
 
    /// Bias is a neuron parameter that is summed with the neuron's weighted inputs
    /// and passed through the neuron's transfer function to generate the neuron's output.
@@ -257,6 +255,8 @@ protected:
 
    ActivationFunction activation_function;
 
+   type dropout_rate = type(0);
+
    /// Display messages to screen. 
 
    bool display = true;
@@ -266,6 +266,7 @@ protected:
 #else
 };
 #endif
+
 
 struct PerceptronLayerForwardPropagation : LayerForwardPropagation
 {
@@ -286,6 +287,22 @@ struct PerceptronLayerForwardPropagation : LayerForwardPropagation
          set(new_batch_samples_number, new_layer_pointer);
      }
 
+    Eigen::array<ptrdiff_t, 2> get_inputs_dimensions_array() const
+    {
+        const Index inputs_number = layer_pointer->get_inputs_number();
+
+        return Eigen::array<ptrdiff_t, 2>({batch_samples_number, inputs_number});
+    }
+
+
+    Eigen::array<ptrdiff_t, 2> get_outputs_dimensions_array() const
+    {
+        const Index neurons_number = layer_pointer->get_neurons_number();
+
+        return Eigen::array<ptrdiff_t, 2>({batch_samples_number, neurons_number});
+    }
+
+
      void set(const Index& new_batch_samples_number, Layer* new_layer_pointer)
      {
          layer_pointer = new_layer_pointer;
@@ -296,47 +313,32 @@ struct PerceptronLayerForwardPropagation : LayerForwardPropagation
 
          // Outputs
 
-         outputs_dimensions.resize(2);
-         outputs_dimensions.setValues({batch_samples_number, neurons_number});
+         Tensor<Index, 1> output_dimensions(2);
+         output_dimensions.setValues({batch_samples_number, neurons_number});
 
-         outputs_data = (type*) malloc(static_cast<size_t>(batch_samples_number * neurons_number*sizeof(type)));
+         outputs.resize(1);
+         outputs(0).set_dimensions(output_dimensions);
 
          // Rest of quantities
-
-         combinations.resize(batch_samples_number, neurons_number);
 
          activations_derivatives.resize(batch_samples_number, neurons_number);
      }
 
      void print() const
      {
-         cout << "Combinations:" << endl;
-         cout << combinations.dimensions() << endl;
-
          cout << "Activations derivatives:" << endl;
          cout << activations_derivatives.dimensions() << endl;
 
-
          cout << "Outputs dimensions:" << endl;
-         cout << outputs_dimensions << endl;
+         cout << outputs[0].get_dimensions() << endl;
 
          cout << "Outputs:" << endl;
-         cout << TensorMap<Tensor<type,2>>(outputs_data, outputs_dimensions(0), outputs_dimensions(1)) << endl;
-
-         cout << "Combinations:" << endl;
-         cout << combinations << endl;
+         cout << outputs(0).to_tensor_map<2>() << endl;
 
          cout << "Activations derivatives:" << endl;
          cout << activations_derivatives << endl;
      }
 
-     type* get_combinations_data()
-     {
-         return combinations.data();
-
-     }
-
-     Tensor<type, 2> combinations;
      Tensor<type, 2> activations_derivatives;
 };
 

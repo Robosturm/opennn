@@ -53,7 +53,8 @@ int main(void)
         "Outlier2Dimensions\n"
              << endl;
 
-        cin >> name;
+//        cin >> name;
+        name = "cardio";
 
         // Data set
 

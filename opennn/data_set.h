@@ -41,30 +41,33 @@
 #include "statistics.h"
 #include "scaling.h"
 #include "correlations.h"
-#include "opennn_strings.h"
 #include "tensor_utilities.h"
 #include "text_analytics.h"
-
-// Filesystem namespace
-
-#ifdef __APPLE__
-#include <Availability.h> // for deployment target to support pre-catalina targets without std::fs
-#endif
-#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || (defined(__cplusplus) && __cplusplus >= 201703L)) && defined(__has_include)
-#if __has_include(<filesystem>) && (!defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500)
-#define GHC_USE_STD_FS
-#include <filesystem>
-namespace fs = std::filesystem;
-#endif
-#endif
-#ifndef GHC_USE_STD_FS
-#include "filesystem.h"
-namespace fs = ghc::filesystem;
-#endif
+#include "codification.h"
+#include "dynamic_tensor.h"
 
 using namespace std;
 using namespace Eigen;
-using namespace fs;
+
+// Filesystem namespace
+
+// #ifdef __APPLE__
+// #include <Availability.h> // for deployment target to support pre-catalina targets without fs
+// #endif
+// #if((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || (defined(__cplusplus) && __cplusplus >= 201703L)) && defined(__has_include)
+// #if __has_include(<filesystem>) && (!defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500)
+// #define GHC_USE_STD_FS
+// #include <filesystem>
+// namespace fs = filesystem;
+// #endif
+// #endif
+// #ifndef GHC_USE_STD_FS
+// #include "filesystem.h"
+// namespace fs = ghc::filesystem;
+// #endif
+
+// using namespace fs;
+
 
 namespace opennn
 {
@@ -92,6 +95,10 @@ public:
     explicit DataSet(const Index&, const Index&);
 
     explicit DataSet(const Index&, const Index&, const Index&);
+
+    explicit DataSet(const Tensor<type, 1>&, const Index&);
+
+    explicit DataSet(const Index&, const Index&, const Index&, const Index&, const Index&);
 
     /// This enumeration represents the data file string codification
     /// (utf8, shift_jis)
@@ -172,8 +179,7 @@ public:
 
         Tensor<VariableUse, 1> categories_uses;
 
-        Scaler scaler= Scaler::MeanStandardDeviation;
-
+        Scaler scaler = Scaler::MeanStandardDeviation;
 
         // Methods
 
@@ -194,6 +200,7 @@ public:
 
         void add_category(const string&);
 
+        void set_categories(const Tensor<string, 1>&);
         void set_categories_uses(const Tensor<string, 1>&);
         void set_categories_uses(const VariableUse&);
 
@@ -229,26 +236,18 @@ public:
 
         virtual ~BoundingBox() {}
 
-
-//        BoundingBox regression()
-//        {
-//            /// todo
-//            BoundingBox regressed_bounging_box;
-//            return regressed_bounging_box;
-//        }
-
-
-        Index get_bounding_box_size(const BoundingBox&) const;
+        Index get_size() const;
 
         BoundingBox resize(const Index&, const Index&, const Index&) const;
 
         void print() const;
 
+        Index channels_number;
+
         Tensor<type, 1> data;
 
         Index x_center;
         Index y_center;
-        Index channels_number;
         Index width;
         Index height;
 
@@ -256,9 +255,6 @@ public:
         Index y_top_left;
         Index x_bottom_right;
         Index y_bottom_right;
-
-        string label; // ????
-        Index score; // ????
     };
 
 
@@ -342,6 +338,7 @@ public:
     Tensor<string, 1> get_used_columns_names() const;
 
     ColumnType get_column_type(const Index& index) const {return columns[index].type;}
+    string get_column_type_string(const ColumnType&) const;
 
     VariableUse get_column_use(const Index& ) const;
     Tensor<VariableUse, 1> get_columns_uses() const;
@@ -367,6 +364,7 @@ public:
     Index get_variable_index(const string&name) const;
 
     Tensor<Index, 1> get_variable_indices(const Index&) const;
+    Tensor<Index, 1> get_categorical_to_indices(const Index&) const;
     Tensor<Index, 1> get_unused_variables_indices() const;
     Tensor<Index, 1> get_used_variables_indices() const;
     Tensor<Index, 1> get_input_variables_indices() const;
@@ -378,6 +376,7 @@ public:
 
     const Tensor<Index, 1>& get_input_variables_dimensions() const;
     Index get_input_variables_rank() const;
+
 
     // Scalers get methods
 
@@ -430,6 +429,14 @@ public:
     Tensor<type, 2> get_column_data(const Index&, const Tensor<Index, 1>&) const;
     Tensor<type, 2> get_column_data(const Tensor<Index, 1>&) const;
     Tensor<type, 2> get_column_data(const string&) const;
+    Tensor<type, 2> get_drop_column_data(const Index&) const;
+
+    map<string, DataSet> group_by(const DataSet&, const string&) const;
+    Tensor<type, 2> concat();
+    string get_sample_category(const Index&, const Index&) const;
+    Tensor<type, 1> get_sample(const Index&) const;
+    void add_sample(const Tensor<type, 1>&);
+    void quicksort_by_column(Index);
 
     Tensor<type, 1> get_variable_data(const Index&) const;
     Tensor<type, 1> get_variable_data(const string&) const;
@@ -468,6 +475,8 @@ public:
     const Index& get_lags_number() const;
     const Index& get_steps_ahead() const;
     const string& get_time_column() const;
+    const string& get_group_by_column() const;
+
     Index get_time_series_time_column_index() const;
 
     const Index& get_short_words_length() const;
@@ -478,7 +487,21 @@ public:
 
     static Scaler get_scaling_unscaling_method(const string&);
 
+    Tensor<string, 1> get_context_vocabulary() const;
+    Tensor<string, 1> get_completion_vocabulary() const;
+
     Index get_gmt() const;
+
+
+    bool get_augmentation() const;
+    bool get_random_reflection_axis_x() const;
+    bool get_random_reflection_axis_y() const;
+    type get_random_rotation_minimum() const;
+    type get_random_rotation_maximum() const;
+    type get_random_horizontal_translation_minimum() const;
+    type get_random_horizontal_translation_maximum() const;
+    type get_random_vertical_translation_minimum() const;
+    type get_random_vertical_translation_maximum() const;
 
     const bool& get_display() const;
 
@@ -488,18 +511,19 @@ public:
     void set(const Tensor<type, 2>&);
     void set(const Index&, const Index&);
     void set(const Index&, const Index&, const Index&);
+    void set(const Index&, const Index&, const Index&, const Index&, const Index&);
     void set(const DataSet&);
     void set(const tinyxml2::XMLDocument&);
     void set(const string&);
     void set(const string&, const char&, const bool&);
     void set(const string&, const char&, const bool&, const DataSet::Codification&);
-
+    void set(const Tensor<type, 1>&, const Index&);
+    void set_properties_from_parent(const DataSet&);
     void set_default();
 
     void set_project_type_string(const string&);
     void set_project_type(const ProjectType&);
 
-//    void set_threads();
     void set_threads_number(const int&);
 
     // Samples set methods
@@ -538,6 +562,7 @@ public:
     void set_columns_uses(const Tensor<string, 1>&);
     void set_columns_uses(const Tensor<VariableUse, 1>&);
     void set_columns_unused();
+    void set_columns_types(const Tensor<string, 1>&);
     void set_input_target_columns(const Tensor<Index, 1>&, const Tensor<Index, 1>&);
     void set_input_target_columns(const Tensor<string, 1>&, const Tensor<string, 1>&);
     void set_input_columns_unused();
@@ -573,6 +598,7 @@ public:
     // Variables set methods
 
     void set_variables_names(const Tensor<string, 1>&);
+    void set_variables_names_from_columns(const Tensor<string, 1>& new_variables_names, const Tensor<DataSet::Column, 1>& new_columns);
     void set_variable_name(const Index&, const string&);
 
     void set_input();
@@ -584,6 +610,8 @@ public:
     // Data set methods
 
     void set_data(const Tensor<type, 2>&);
+    void set_data(const Tensor<type, 1>&);
+    void set_data(const Tensor<type, 2>&, const bool&);
 
     // Members set methods
 
@@ -610,6 +638,7 @@ public:
     void set_lags_number(const Index&);
     void set_steps_ahead_number(const Index&);
     void set_time_column(const string&);
+    void set_group_by_column(const string&);
 
     void set_short_words_length(const Index&);
     void set_long_words_length(const Index&);
@@ -618,6 +647,16 @@ public:
     void set_gmt(Index&);
 
     void set_display(const bool&);
+
+    void set_augmentation(const bool&);
+    void set_random_reflection_axis_x(const bool&);
+    void set_random_reflection_axis_y(const bool&);
+    void set_random_rotation_minimum(const type&);
+    void set_random_rotation_maximum(const type&);
+    void set_random_horizontal_translation_minimum(const type&);
+    void set_random_horizontal_translation_maximum(const type&);
+    void set_random_vertical_translation_minimum(const type&);
+    void set_random_vertical_translation_maximum(const type&);
 
     // Check methods
 
@@ -648,6 +687,7 @@ public:
     Tensor<string, 1> unuse_constant_columns();
 
     Tensor<Index, 1> unuse_repeated_samples();
+    Tensor<string, 1> get_columns_types() const;
 
     Tensor<string, 1> unuse_uncorrelated_columns(const type& = type(0.25));
     Tensor<string, 1> unuse_multicollinear_columns(Tensor<Index, 1>&, Tensor<Index, 1>&);
@@ -718,6 +758,7 @@ public:
 
     Tensor<Correlation, 2> calculate_input_target_columns_correlations() const;
     Tensor<Correlation, 2> calculate_input_target_columns_correlations_spearman() const;
+    Tensor<Correlation, 2> calculate_relevant_input_target_columns_correlations(const Tensor<Index, 1>&, const Tensor<Index, 1>&) const;
 
     void print_input_target_columns_correlations() const;
 
@@ -774,13 +815,15 @@ public:
     void transform_time_series();
     void transform_time_series_columns();
     void transform_time_series_data();
+    void transform_time_series_non_categorical_data();
+    void fill_time_series_gaps();
 
     void get_time_series_columns_number(const Index&);
     void set_time_series_data(const Tensor<type, 2>&);
     void set_time_series_columns_number(const Index&);
 
-
     Tensor<type, 2> get_time_series_column_data(const Index&) const;
+    Tensor<type, 2> pivot_to_long_format(const Index& = -1);
     Tensor<type, 2> calculate_autocorrelations(const Index& = 10) const;
     Tensor<type, 3> calculate_cross_correlations(const Index& = 10) const;
 
@@ -866,21 +909,21 @@ public:
 
     void read_csv();
 
+    void read_csv_language_model();
+
     Tensor<unsigned char, 1> read_bmp_image(const string&);
 
-    void read_bmp();
+    void fill_image_data(const int&, const int&, const int&, const Tensor<type, 2>&);
 
     void read_ground_truth();
 
     void read_txt();
 
+    void read_txt_language_model();
+
     // Image methods
 
-//    void sort_channel(Tensor<unsigned char,1>&, Tensor<unsigned char,1>&, const int& );
-
-//    Tensor<unsigned char, 1> remove_padding(Tensor<unsigned char, 1>&, const int&,const int&, const int& );
-
-//    Tensor<unsigned char, 1> resize_image(Tensor<unsigned char, 1> &, const Index &, const Index &, const Index &);
+    void read_bmp();
 
     BoundingBox propose_random_region(const Tensor<unsigned char, 1>& image) const;
 
@@ -891,8 +934,6 @@ public:
     Tensor<type, 1> get_bounding_box(const Tensor<unsigned char, 1>&,
                                      const Index&, const Index&,
                                      const Index&, const Index&) const;
-
-//    Tensor<unsigned char, 1> slicing(Tensor<unsigned char, 1>&, int&, int&);
 
     // Trasform methods
 
@@ -910,7 +951,6 @@ public:
     void impute_missing_values_mean();
     void impute_missing_values_median();
     void impute_missing_values_interpolate();
-
 
     void scrub_missing_values();
 
@@ -933,9 +973,6 @@ public:
 
     // Eigen methods
 
-    void initialize_sequential(Tensor<Index, 1>&, const Index&, const Index&, const Index&) const;
-    void intialize_sequential(Tensor<type, 1>&, const type&, const type&, const type&) const;
-
     Tensor<Index, 2> split_samples(const Tensor<Index, 1>&, const Index&) const;
 
     bool get_has_rows_labels() const;
@@ -949,6 +986,8 @@ public:
 
     void read_csv_2_simple();
     void read_csv_3_simple();
+
+    void read_csv_3_language_model();
 
     void read_csv_2_complete();
     void read_csv_3_complete();
@@ -998,6 +1037,8 @@ private:
 
     string missing_values_label = "NA";
 
+    Tensor<bool, 1> nans_columns;
+
     /// Header which contains variables name.
 
     bool has_columns_names = false;
@@ -1005,10 +1046,6 @@ private:
     /// Header which contains the rows label.
 
     bool has_rows_labels = false;
-
-    /// Image classification model
-
-    bool convolutional_model = false;
 
     /// Class containing file string codification
 
@@ -1025,6 +1062,12 @@ private:
     /// Index where time variable is located for forecasting applications.
 
     string time_column;
+
+    Index time_variable_index;
+
+    string group_by_column;
+
+    Index group_by_column_index;
 
     /// Number of lags.
 
@@ -1062,6 +1105,16 @@ private:
 
     Tensor<string, 2> text_data_file_preview;
 
+    // LANGUAGE MODEL
+
+    Tensor<string, 1> context_vocabulary;
+
+    Tensor<string, 1> completion_vocabulary;
+
+    Index max_completion_length;
+
+    Index max_context_length;
+
     // MISSING VALUES
 
     /// Missing values method.
@@ -1082,7 +1135,7 @@ private:
 
     // Image treatment
 
-    static size_t number_of_elements_in_directory(const fs::path& path);
+    // static size_t number_of_elements_in_directory(const fs::path& path);
 
     Index images_number = 0;
     Index channels_number = 0;
@@ -1090,14 +1143,23 @@ private:
     Index image_height = 0;
     Index padding = 0;
 
+    bool augmentation = false;
+    bool random_reflection_axis_x = false;
+    bool random_reflection_axis_y = false;
+    type random_rotation_minimum = 0;
+    type random_rotation_maximum = 0;
+    type random_horizontal_translation_minimum = 0;
+    type random_horizontal_translation_maximum = 0;
+    type random_vertical_translation_minimum = 0;
+    type random_vertical_translation_maximum = 0;
+
     Tensor<string, 1> labels_tokens;
 
     Index width_no_padding;
-    // Local Outlier Factor
 
-    Tensor<Index, 1> select_outliers_via_standard_deviation(const Tensor<type, 1>&, const type & = type(2.0), bool = true) const;
+    Tensor<Index, 1> select_outliers_via_standard_deviation(const Tensor<type, 1>&, const type& = type(2.0), bool = true) const;
 
-    Tensor<Index, 1> select_outliers_via_contamination(const Tensor<type, 1>&, const type & = type(0.05), bool = true) const;
+    Tensor<Index, 1> select_outliers_via_contamination(const Tensor<type, 1>&, const type& = type(0.05), bool = true) const;
 
     type calculate_euclidean_distance(const Tensor<Index, 1>&, const Index&, const Index&) const;
 
@@ -1134,6 +1196,11 @@ private:
     type calculate_tree_path(const Tensor<type, 2>&, const Index&, const Index&) const;
 
     Tensor<type, 1> calculate_average_forest_paths(const Tensor<Tensor<type, 2>, 1>&, const Index&) const;
+
+    Index regions_number = 1000; // Number of region proposals per image
+    Index region_rows = 6; // Final region width to warp
+    Index region_columns = 6; // Final region height to warp
+
 };
 
 
@@ -1153,23 +1220,38 @@ struct DataSetBatch
 
     virtual ~DataSetBatch()
     {
-        if(targets_data != nullptr) free(targets_data);
     }
 
-    Index get_batch_size() const;
+    Index get_batch_samples_number() const;
 
     void set(const Index&, DataSet*);
+/*
+    void set_inputs(const Tensor<DynamicTensor<type>, 1>& new_inputs)
+    {
+        inputs = new_inputs;
+    }
+
+    void set_inputs(const DynamicTensor<type>& new_inputs)
+    {
+        inputs.resize(1);
+        inputs(0) = new_inputs;
+    }
 
     void set_inputs(Tensor<type, 2>& new_inputs)
     {
-        auto new_inputs_data = make_unique<type[]>(new_inputs.size());
-        copy(new_inputs.data(), new_inputs.data() + new_inputs.size(), new_inputs_data.get());
-
-        inputs_data = move(new_inputs_data);
-        inputs_dimensions = get_dimensions(new_inputs);
+        inputs.resize(1);
+        inputs(0) = DynamicTensor<type>(new_inputs);
     }
 
+    void set_inputs(Tensor<type, 4>& new_inputs)
+    {
+        inputs.resize(1);
+        inputs(0) = DynamicTensor<type>(new_inputs);
+    }
+*/
     void fill(const Tensor<Index, 1>&, const Tensor<Index, 1>&, const Tensor<Index, 1>&);
+
+    void perform_augmentation();
 
     void print() const;
 
@@ -1177,15 +1259,9 @@ struct DataSetBatch
 
     DataSet* data_set_pointer = nullptr;
 
-//    type* inputs_data = nullptr;
+    Tensor<DynamicTensor<type>, 1> inputs;
 
-    unique_ptr<type[]> inputs_data;
-
-    Tensor<Index, 1> inputs_dimensions;
-
-    type* targets_data = nullptr;
-
-    Tensor<Index, 1> targets_dimensions;
+    DynamicTensor<type> targets;
 };
 
 

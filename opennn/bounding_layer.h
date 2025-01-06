@@ -93,9 +93,7 @@ public:
 
    // Lower and upper bounds
 
-//   void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>&) final;
-
-   void forward_propagate(type*, const Tensor<Index, 1>&, LayerForwardPropagation*, bool&) final;
+   void forward_propagate(const Tensor<DynamicTensor<type>, 1>&, LayerForwardPropagation*, const bool&) final;
 
    // Expression methods
 
@@ -156,10 +154,10 @@ struct BoundingLayerForwardPropagation : LayerForwardPropagation
 
         // Allocate memory for outputs_data
 
-        outputs_data = (type*) malloc( static_cast<size_t>(batch_samples_number * neurons_number*sizeof(type)));
-
-        outputs_dimensions.resize(2);
-        outputs_dimensions.setValues({batch_samples_number, neurons_number});
+        outputs.resize(1);
+        Tensor<Index, 1> output_dimensions(2);
+        output_dimensions.setValues({batch_samples_number, neurons_number});
+        outputs(0).set_dimensions(output_dimensions);
     }
 
 
@@ -167,7 +165,7 @@ struct BoundingLayerForwardPropagation : LayerForwardPropagation
     {
         cout << "Outputs:" << endl;
 
-        cout << TensorMap<Tensor<type,2>>(outputs_data, outputs_dimensions(0), outputs_dimensions(1)) << endl;
+        cout << outputs(0).to_tensor_map<4>() << endl;
     }
 };
 

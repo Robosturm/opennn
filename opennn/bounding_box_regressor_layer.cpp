@@ -16,14 +16,14 @@ namespace opennn
 /// It creates a empty layer object.
 /// This constructor also initializes the rest of the class members to their default values.
 
-    BoundingBoxRegressorLayer::BoundingBoxRegressorLayer() : Layer()
+BoundingBoxRegressorLayer::BoundingBoxRegressorLayer() : Layer()
 {
 }
 
 
-void BoundingBoxRegressorLayer::forward_propagate(type* inputs_data,
-                          const Tensor<Index,1>& inputs_dimensions,
-                          LayerForwardPropagation* forward_propagation)
+void BoundingBoxRegressorLayer::forward_propagate(const Tensor<DynamicTensor<type>, 1>& inputs,
+                                                  LayerForwardPropagation* forward_propagation,
+                                                  const bool& is_training)
 {
 
 }

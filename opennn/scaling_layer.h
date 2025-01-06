@@ -52,12 +52,11 @@ public:
 
    // Get methods
 
-   ProjectType get_project_type() const;
-   string get_project_type_string(const ScalingLayer::ProjectType&) const;
+
    Tensor<Index, 1> get_outputs_dimensions() const;
 
    Index get_inputs_number() const final;
-   Tensor<Index, 1> get_input_variables_dimensions() const;
+   Tensor<Index, 1> get_inputs_dimensions() const;
    Index get_neurons_number() const final;
 
    // Inputs descriptives
@@ -89,9 +88,6 @@ public:
    void set(const Tensor<Descriptives, 1>&);
    void set(const Tensor<Descriptives, 1>&, const Tensor<Scaler, 1>&);
    void set(const tinyxml2::XMLDocument&);
-
-   void set_project_type(const ProjectType&);
-   void set_project_type_string(const string&);
 
    void set_inputs_number(const Index&) final;
    void set_neurons_number(const Index&) final;
@@ -129,9 +125,9 @@ public:
 
    void check_range(const Tensor<type, 1>&) const;
 
-   void forward_propagate(type*, const Tensor<Index, 1>&, LayerForwardPropagation*, bool&) final;
+   void forward_propagate(const Tensor<DynamicTensor<type>, 1>&, LayerForwardPropagation*, const bool&) final;
 
-   void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>&) final;
+   void calculate_outputs(type*, const Tensor<Index, 1>&, type*, const Tensor<Index, 1>&);
 
    // Expression methods
 
@@ -155,9 +151,7 @@ public:
 
 protected:
 
-   ScalingLayer::ProjectType project_type;
-
-   Tensor<Index, 1> input_variables_dimensions;
+   Tensor<Index, 1> inputs_dimensions;
 
    /// Descriptives of input variables.
 
@@ -203,31 +197,28 @@ struct ScalingLayerForwardPropagation : LayerForwardPropagation
     {
         layer_pointer = new_layer_pointer;
 
-        const Tensor<Index, 1> input_variables_dimensions = static_cast<ScalingLayer*>(layer_pointer)->get_input_variables_dimensions();
+        const Tensor<Index, 1> input_variables_dimensions = static_cast<ScalingLayer*>(layer_pointer)->get_inputs_dimensions();
         const Index neurons_number = layer_pointer->get_neurons_number();
 
         batch_samples_number = new_batch_samples_number;
 
-//        free(outputs_data);
-
         // Allocate memory for outputs_data
 
-        outputs_data = (type*)malloc(static_cast<size_t>(batch_samples_number * neurons_number*sizeof(type)));
-
-        outputs_dimensions.resize(2);
-
-        outputs_dimensions.setValues({batch_samples_number, neurons_number});
+        outputs.resize(1);
+        Tensor<Index, 1> output_dimensions(2);
+        output_dimensions.setValues({batch_samples_number, neurons_number});
+        outputs(0).set_dimensions(output_dimensions);
     }
 
 
     void print() const
     {
-        cout << "outputs dimension 0: " << outputs_dimensions(0) << endl;
-        cout << "outputs dimension 1: " << outputs_dimensions(1) << endl;
+        cout << "Outputs dimension 0: " << outputs[0].get_dimension(0) << endl;
+        cout << "Outputs dimension 1: " << outputs[0].get_dimension(1) << endl;
 
         cout << "Outputs:" << endl;
 
-        cout << TensorMap<Tensor<type,2>>(outputs_data, outputs_dimensions(0), outputs_dimensions(1)) << endl;
+        cout << outputs(0).to_tensor_map<2>() << endl;
     }
 };
 
