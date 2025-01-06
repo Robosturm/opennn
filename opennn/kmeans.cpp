@@ -16,7 +16,6 @@
 #include <string>
 #include <cstring>
 #include <time.h>
-#include <omp.h>
 // #include <Eigen/Dense>
 // #include "unsupported/Eigen/CXX11/Tensor"
 #include "config.h"
