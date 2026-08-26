@@ -47,7 +47,7 @@
 #include <set>
 #include <regex>
 #include <sstream>
-#include <omp.h>
+// #include <omp.h>
 #include <future>
 #include <queue>
 #include <mutex>
