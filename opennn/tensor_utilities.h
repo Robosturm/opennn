@@ -856,7 +856,6 @@ private:
     Device();
     ~Device();
 
-    unique_ptr<ThreadPool> thread_pool;
     unique_ptr<ThreadPoolDevice> thread_pool_device;
 
 #ifdef OPENNN_CUDA

@@ -804,11 +804,10 @@ bool cuda_available()
 #endif
 }
 
-
 Device::Device()
 {
     int max_threads = thread::hardware_concurrency();
-    if (max_threads <= 0) max_threads = omp_get_max_threads();
+    // if (max_threads <= 0) max_threads = omp_get_max_threads();
     if (max_threads <= 0) max_threads = 1;
 
     set_threads_number(max_threads);
@@ -842,20 +841,19 @@ Device::~Device()
 #endif
 }
 
-
 void Device::set_threads_number(int num_threads)
 {
     if (num_threads <= 0)
     {
         num_threads = thread::hardware_concurrency();
-        if (num_threads <= 0) num_threads = omp_get_max_threads();
+        // if (num_threads <= 0) num_threads = omp_get_max_threads();
         if (num_threads <= 0) num_threads = 1;
     }
 
-    thread_pool = make_unique<ThreadPool>(num_threads);
-    thread_pool_device = make_unique<ThreadPoolDevice>(thread_pool.get(), num_threads);
+    // thread_pool = make_unique<ThreadPool>(num_threads);
+    // thread_pool_device = make_unique<ThreadPoolDevice>(thread_pool.get(), num_threads);
 
-    omp_set_num_threads(num_threads);
+    // omp_set_num_threads(num_threads);
 }
 
 

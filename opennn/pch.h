@@ -10,7 +10,7 @@
 #define NDEBUG
 #endif
 
-#define EIGEN_MAX_ALIGN_BYTES 32
+// #define EIGEN_MAX_ALIGN_BYTES 32
 #define EIGEN_NO_DEBUG
 
 #define NOMINMAX

@@ -130,14 +130,14 @@ class EventCount {
     for (;;) {
       CheckState(state);
       const uint64_t waiters = (state & kWaiterMask) >> kWaiterShift;
-      const uint64_t signals = (state & kSignalMask) >> kSignalShift;
+      const uint64_t _signals = (state & kSignalMask) >> kSignalShift;
       // Easy case: no waiters.
-      if ((state & kStackMask) == kStackMask && waiters == signals) return;
+      if ((state & kStackMask) == kStackMask && waiters == _signals) return;
       uint64_t newstate;
       if (notifyAll) {
         // Empty wait stack and set signal to number of pre-wait threads.
         newstate = (state & kWaiterMask) | (waiters << kSignalShift) | kStackMask;
-      } else if (signals < waiters) {
+      } else if (_signals < waiters) {
         // There is a thread in pre-wait state, unblock it.
         newstate = state + kSignalInc;
       } else {
@@ -148,7 +148,7 @@ class EventCount {
       }
       CheckState(newstate);
       if (state_.compare_exchange_weak(state, newstate, std::memory_order_acq_rel)) {
-        if (!notifyAll && (signals < waiters)) return;  // unblocked pre-wait thread
+        if (!notifyAll && (_signals < waiters)) return;  // unblocked pre-wait thread
         if ((state & kStackMask) == kStackMask) return;
         Waiter* w = &waiters_[state & kStackMask];
         if (!notifyAll) w->next.store(kStackMask, std::memory_order_relaxed);
